@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tool Name</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="text-reverser.html">Text Reversal</a>
+        <a href="line-break-lab.html">Line Break Lab</a>
+        <a href="eraser-lab.html">Eraser Lab</a>
+        <a href="alphabetizer-lab.html">Alphabetizer Lab</a>
+        <a href="markov-mashup-lab.html">Markov Mashup Lab</a>
+    </nav>
+    
+    <!-- Tool content here -->
+     <div class="container">
+        <div class="header">
+            <h1>Interactive Poetry Eraser</h1>
+            <p>Transform text through selective erasure • Create found poetry from any text</p>
+        </div>
+
+        <div class="controls">
+            <div class="file-upload">
+                <label class="file-input-wrapper">
+                    Choose Text File (.txt only)
+                    <input type="file" id="fileInput" accept=".txt">
+                </label>
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+
+            <div class="mode-selector">
+                <h3>Erasure Mode</h3>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" data-mode="word">By Word</button>
+                    <button class="mode-btn" data-mode="character">By Character</button>
+                </div>
+            </div>
+
+            <div class="erasure-controls">
+                <div class="control-group">
+                    <h3>Pattern Controls</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Every Nth Element</span>
+                            <span id="nthValue">2</span>
+                        </div>
+                        <input type="range" class="slider" id="nthSlider" min="2" max="10" value="2">
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="enableErasure" checked>
+                        <label for="enableErasure">Enable Erasure</label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Advanced Patterns</h3>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="eraseEvery2nd">
+                        <label for="eraseEvery2nd">Every 2nd</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="eraseEvery3rd">
+                        <label for="eraseEvery3rd">Every 3rd</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="eraseEvery5th">
+                        <label for="eraseEvery5th">Every 5th</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="eraseEvery7th">
+                        <label for="eraseEvery7th">Every 7th</label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Display Options</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Font Size</span>
+                            <span id="fontSizeValue">16px</span>
+                        </div>
+                        <input type="range" class="slider" id="fontSizeSlider" min="12" max="24" value="16">
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="preserveSpacing" checked>
+                        <label for="preserveSpacing">Preserve Original Spacing</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="output">
+            <div id="outputText" class="output-text">
+                <div class="placeholder-text">
+                    Upload a .txt file to begin creating your erasure poetry
+                </div>
+            </div>
+            <div id="stats" class="stats" style="display: none;">
+                <span>Original: <span id="originalCount">0</span> elements</span>
+                <span>Remaining: <span id="remainingCount">0</span> elements</span>
+                <span>Erased: <span id="erasedCount">0</span> elements</span>
+            </div>
+        </div>
+
+    <script>
+        // JavaScript for this specific tool
+                let originalText = '';
+        let currentMode = 'word';
+
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const errorMessage = document.getElementById('errorMessage');
+        const outputText = document.getElementById('outputText');
+        const stats = document.getElementById('stats');
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        
+        // Controls
+        const nthSlider = document.getElementById('nthSlider');
+        const nthValue = document.getElementById('nthValue');
+        const enableErasure = document.getElementById('enableErasure');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const preserveSpacing = document.getElementById('preserveSpacing');
+        
+        // Advanced pattern checkboxes
+        const patternCheckboxes = {
+            2: document.getElementById('eraseEvery2nd'),
+            3: document.getElementById('eraseEvery3rd'),
+            5: document.getElementById('eraseEvery5th'),
+            7: document.getElementById('eraseEvery7th')
+        };
+
+        // File upload handler
+        fileInput.addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            errorMessage.textContent = '';
+
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.txt')) {
+                errorMessage.textContent = 'Please select a .txt file only.';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                originalText = e.target.result;
+                processText();
+            };
+            reader.readAsText(file);
+        }
+
+        // Mode switching
+        modeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modeButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentMode = button.dataset.mode;
+                if (originalText) processText();
+            });
+        });
+
+        // Control listeners
+        nthSlider.addEventListener('input', () => {
+            nthValue.textContent = nthSlider.value;
+            if (originalText) processText();
+        });
+
+        enableErasure.addEventListener('change', () => {
+            if (originalText) processText();
+        });
+
+        fontSizeSlider.addEventListener('input', () => {
+            const size = fontSizeSlider.value + 'px';
+            fontSizeValue.textContent = size;
+            outputText.style.fontSize = size;
+        });
+
+        preserveSpacing.addEventListener('change', () => {
+            if (originalText) processText();
+        });
+
+        // Advanced pattern listeners
+        Object.values(patternCheckboxes).forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                if (originalText) processText();
+            });
+        });
+
+        function processText() {
+            if (!originalText) return;
+
+            let elements;
+            if (currentMode === 'word') {
+                elements = originalText.split(' ');
+            } else {
+                elements = originalText.split('');
+            }
+
+            const processedElements = elements.map((element, index) => {
+                if (!enableErasure.checked) return element;
+
+                let shouldErase = false;
+                const position = index + 1;
+
+                // Check main nth pattern
+                if (position % parseInt(nthSlider.value) === 0) {
+                    shouldErase = true;
+                }
+
+                // Check advanced patterns
+                for (const [nth, checkbox] of Object.entries(patternCheckboxes)) {
+                    if (checkbox.checked && position % parseInt(nth) === 0) {
+                        shouldErase = true;
+                        break;
+                    }
+                }
+
+                if (shouldErase) {
+                    if (currentMode === 'word') {
+                        return preserveSpacing.checked ? ' '.repeat(element.length) : '';
+                    } else {
+                        return preserveSpacing.checked ? ' ' : '';
+                    }
+                }
+
+                return element;
+            });
+
+            let result;
+            if (currentMode === 'word') {
+                result = processedElements.join(' ');
+            } else {
+                result = processedElements.join('');
+            }
+
+            outputText.textContent = result;
+            updateStats(elements, processedElements);
+        }
+
+        function updateStats(originalElements, processedElements) {
+            const originalCount = originalElements.length;
+            const erasedCount = processedElements.filter((element, index) => {
+                if (currentMode === 'word') {
+                    return element.trim() === '' || element === ' '.repeat(originalElements[index].length);
+                } else {
+                    return element === ' ' || element === '';
+                }
+            }).length;
+            const remainingCount = originalCount - erasedCount;
+
+            document.getElementById('originalCount').textContent = originalCount;
+            document.getElementById('remainingCount').textContent = remainingCount;
+            document.getElementById('erasedCount').textContent = erasedCount;
+            
+            stats.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tool Name</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="text-reverser.html">Text Reversal</a>
+        <a href="line-break-lab.html">Line Break Lab</a>
+        <a href="eraser-lab.html">Eraser Lab</a>
+        <a href="alphabetizer-lab.html">Alphabetizer Lab</a>
+        <a href="markov-mashup-lab.html">Markov Mashup Lab</a>
+    </nav>
+    
+    <!-- Tool content here -->
+     <div class="container">
+        <h1>Text Reversal Playground</h1>
+        <p class="subtitle">Upload a .txt file and experiment with reversing words and sentences</p>
+        
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📄</div>
+            <p style="font-size: 1.2em; color: #667eea; font-weight: 600;">Click or drag a .txt file here</p>
+            <p style="color: #999; margin-top: 10px;">Your text will appear below once uploaded</p>
+            <input type="file" id="fileInput" accept=".txt">
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" id="reverseWordsBtn" disabled>Reverse Word Order</button>
+            <button class="control-btn" id="reverseLinesBtn" disabled>Reverse Line/Sentence Order</button>
+            <button class="control-btn reset-btn" id="resetBtn" disabled>Reset to Original</button>
+        </div>
+        
+        <div class="break-control">
+            <h3>Insert Line Breaks</h3>
+            <p style="color: #666; margin-bottom: 15px; font-size: 0.95em;">Enter a character or string to add line breaks after each occurrence</p>
+            <div class="break-input-group">
+                <input type="text" class="break-input" id="breakInput" placeholder='e.g., "." or "," or "the"' disabled>
+                <button class="break-btn" id="addBreaksBtn" disabled>Add Breaks</button>
+            </div>
+        </div>
+        
+        <div class="text-display" id="textDisplay" style="display: none;">
+            <div class="toggle-bar">
+                <button class="toggle-btn active" id="showOriginalBtn">Original Text</button>
+                <button class="toggle-btn" id="showModifiedBtn">Modified Text</button>
+            </div>
+            <div class="text-box">
+                <div class="text-content" id="displayText"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for this specific tool
+
+let originalText = '';
+let currentText = '';
+let showingOriginal = true;
+
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const reverseWordsBtn = document.getElementById('reverseWordsBtn');
+const reverseLinesBtn = document.getElementById('reverseLinesBtn');
+const resetBtn = document.getElementById('resetBtn');
+const breakInput = document.getElementById('breakInput');
+const addBreaksBtn = document.getElementById('addBreaksBtn');
+const textDisplay = document.getElementById('textDisplay');
+const displayText = document.getElementById('displayText');
+const showOriginalBtn = document.getElementById('showOriginalBtn');
+const showModifiedBtn = document.getElementById('showModifiedBtn');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+});
+
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.txt')) {
+        readFile(file);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        readFile(file);
+    }
+});
+
+function readFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        originalText = e.target.result;
+        currentText = originalText;
+        displayTexts();
+        enableButtons();
+    };
+    reader.readAsText(file);
+}
+
+function displayTexts() {
+    displayText.textContent = showingOriginal ? originalText : currentText;
+    textDisplay.style.display = 'block';
+}
+
+function updateDisplay() {
+    displayText.textContent = showingOriginal ? originalText : currentText;
+}
+
+function enableButtons() {
+    reverseWordsBtn.disabled = false;
+    reverseLinesBtn.disabled = false;
+    resetBtn.disabled = false;
+    breakInput.disabled = false;
+    addBreaksBtn.disabled = false;
+}
+
+reverseWordsBtn.addEventListener('click', () => {
+    const words = currentText.split(/\s+/);
+    currentText = words.reverse().join(' ');
+    updateDisplay();
+});
+
+reverseLinesBtn.addEventListener('click', () => {
+    const segments = currentText.split(/([.\n])/);
+    const lines = [];
+    let temp = '';
+    
+    for (let i = 0; i < segments.length; i++) {
+        if (segments[i] === '.' || segments[i] === '\n') {
+            if (temp.trim()) {
+                lines.push(temp + segments[i]);
+                temp = '';
+            } else if (segments[i] === '\n') {
+                lines.push('\n');
+            }
+        } else {
+            temp += segments[i];
+        }
+    }
+    
+    if (temp.trim()) {
+        lines.push(temp);
+    }
+    
+    currentText = lines.reverse().join('');
+    updateDisplay();
+});
+
+resetBtn.addEventListener('click', () => {
+    currentText = originalText;
+    updateDisplay();
+});
+
+addBreaksBtn.addEventListener('click', () => {
+    const breakString = breakInput.value;
+    if (breakString) {
+        const escapedString = breakString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedString, 'g');
+        currentText = currentText.replace(regex, breakString + '\n');
+        updateDisplay();
+    }
+});
+
+showOriginalBtn.addEventListener('click', () => {
+    showingOriginal = true;
+    showOriginalBtn.classList.add('active');
+    showModifiedBtn.classList.remove('active');
+    updateDisplay();
+});
+
+showModifiedBtn.addEventListener('click', () => {
+    showingOriginal = false;
+    showModifiedBtn.classList.add('active');
+    showOriginalBtn.classList.remove('active');
+    updateDisplay();
+});
+
+breakInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !addBreaksBtn.disabled) {
+        addBreaksBtn.click();
+    }
+});
+    </script>
+    </body>
+</html>

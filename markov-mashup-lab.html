@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Markov Mashup Lab</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="text-reverser.html">Text Reversal</a>
+        <a href="line-break-lab.html">Line Break Lab</a>
+        <a href="eraser-lab.html">Eraser Lab</a>
+        <a href="markov-mashup-lab.html">Markov Mashup Lab</a>
+        <a href="alphabetizer-lab.html">Alphabetizer Lab</a>
+    </nav>
+    
+    <!-- Tool content here -->
+     <div class="container">
+        <div class="header">
+            <h1>🎭 Markov Text Generator</h1>
+            <p>Upload your text files and generate creative content using Markov chains</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Drop your .txt files here or click to browse</div>
+                    <div style="font-size: 0.9em; color: #999;">Supports multiple files</div>
+                    <input type="file" id="fileInput" class="file-input" accept=".txt" multiple>
+                </div>
+                
+                <div id="fileInfo" class="file-info" style="display: none;">
+                    <h3>📊 Corpus Statistics</h3>
+                    <div class="file-stats" id="fileStats"></div>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="orderInput">Chain Order (1-5)</label>
+                        <input type="number" id="orderInput" min="1" max="5" value="2">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="lengthInput">Number of Sentences</label>
+                        <input type="number" id="lengthInput" min="1" max="20" value="3">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="maxWordsInput">Max Words per Sentence</label>
+                        <input type="number" id="maxWordsInput" min="5" max="100" value="25" placeholder="Leave empty for no limit">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="startInput">Starting Word (optional)</label>
+                        <input type="text" id="startInput" placeholder="Leave empty for random start">
+                    </div>
+                    
+                    <button class="generate-btn" id="generateBtn" disabled>
+                        <span id="btnText">Upload text files first</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="output-section">
+                <div class="output-header">
+                    <div class="output-title">🎨 Generated Text</div>
+                    <button class="clear-btn" id="clearBtn">Clear All</button>
+                </div>
+                <div class="output-container" id="outputContainer">
+                    <div style="text-align: center; color: #999; padding: 40px;">
+                        Generated text will appear here...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for this specific tool
+                class MarkovChain {
+            constructor(order = 2) {
+                this.order = order;
+                this.chain = {};
+                this.starters = [];
+            }
+
+            addText(text) {
+                const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+                
+                for (let sentence of sentences) {
+                    const words = sentence.trim().split(/\s+/).filter(w => w.length > 0);
+                    if (words.length < this.order + 1) continue;
+                    
+                    // Add sentence starter
+                    if (words.length >= this.order) {
+                        const starter = words.slice(0, this.order).join(' ').toLowerCase();
+                        this.starters.push(starter);
+                    }
+                    
+                    // Build the chain
+                    for (let i = 0; i <= words.length - this.order; i++) {
+                        const gram = words.slice(i, i + this.order).join(' ').toLowerCase();
+                        const nextWord = i + this.order < words.length ? words[i + this.order] : null;
+                        
+                        if (!this.chain[gram]) {
+                            this.chain[gram] = [];
+                        }
+                        
+                        if (nextWord) {
+                            this.chain[gram].push(nextWord);
+                        }
+                    }
+                }
+            }
+
+            generateSentence(startWord = null, maxWords = null) {
+                let currentGram;
+                
+                if (startWord && startWord.trim()) {
+                    // Try to find a gram that starts with the given word
+                    const searchTerm = startWord.toLowerCase();
+                    const matchingGrams = Object.keys(this.chain).filter(gram => 
+                        gram.startsWith(searchTerm)
+                    );
+                    
+                    if (matchingGrams.length > 0) {
+                        currentGram = matchingGrams[Math.floor(Math.random() * matchingGrams.length)];
+                    } else {
+                        currentGram = this.starters[Math.floor(Math.random() * this.starters.length)];
+                    }
+                } else {
+                    currentGram = this.starters[Math.floor(Math.random() * this.starters.length)];
+                }
+                
+                if (!currentGram || !this.chain[currentGram]) {
+                    return "Unable to generate text. Please try with different settings.";
+                }
+                
+                let result = currentGram.split(' ').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+                
+                let attempts = 0;
+                const maxAttempts = 100;
+                let wordCount = currentGram.split(' ').length;
+                
+                while (attempts < maxAttempts) {
+                    const nextWords = this.chain[currentGram];
+                    if (!nextWords || nextWords.length === 0) break;
+                    
+                    const nextWord = nextWords[Math.floor(Math.random() * nextWords.length)];
+                    
+                    // Check word limit before adding
+                    if (maxWords && wordCount >= maxWords) {
+                        // Force sentence ending if we've hit the limit
+                        break;
+                    }
+                    
+                    result += ' ' + nextWord;
+                    wordCount++;
+                    
+                    // Stop at sentence endings
+                    if (/[.!?]$/.test(nextWord)) break;
+                    
+                    // Update current gram
+                    const words = currentGram.split(' ');
+                    words.shift();
+                    words.push(nextWord.toLowerCase());
+                    currentGram = words.join(' ');
+                    
+                    attempts++;
+                }
+                
+                // Ensure sentence ends properly
+                if (!/[.!?]$/.test(result)) {
+                    const endings = ['.', '!', '.', '.', '.'];
+                    result += endings[Math.floor(Math.random() * endings.length)];
+                }
+                
+                return result;
+            }
+
+            generateText(numSentences = 3, startWord = null, maxWords = null) {
+                const sentences = [];
+                for (let i = 0; i < numSentences; i++) {
+                    const sentence = this.generateSentence(i === 0 ? startWord : null, maxWords);
+                    sentences.push(sentence);
+                }
+                return sentences.join(' ');
+            }
+
+            getStats() {
+                return {
+                    totalGrams: Object.keys(this.chain).length,
+                    totalStarters: this.starters.length,
+                    avgContinuations: Object.values(this.chain).reduce((acc, val) => acc + val.length, 0) / Object.keys(this.chain).length || 0
+                };
+            }
+        }
+
+        let markovChain = null;
+        let totalWords = 0;
+        let totalFiles = 0;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const btnText = document.getElementById('btnText');
+        const outputContainer = document.getElementById('outputContainer');
+        const clearBtn = document.getElementById('clearBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileStats = document.getElementById('fileStats');
+
+        // File upload handling
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            generateBtn.disabled = true;
+            btnText.innerHTML = '<span class="loading"></span> Processing files...';
+            
+            const order = parseInt(document.getElementById('orderInput').value) || 2;
+            markovChain = new MarkovChain(order);
+            totalWords = 0;
+            totalFiles = 0;
+            
+            try {
+                for (const file of files) {
+                    if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+                        const text = await readFile(file);
+                        markovChain.addText(text);
+                        totalWords += text.split(/\s+/).length;
+                        totalFiles++;
+                    }
+                }
+                
+                if (totalFiles > 0) {
+                    updateFileStats();
+                    generateBtn.disabled = false;
+                    btnText.textContent = 'Generate Text';
+                } else {
+                    btnText.textContent = 'No valid .txt files found';
+                    setTimeout(() => {
+                        btnText.textContent = 'Upload text files first';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error processing files:', error);
+                btnText.textContent = 'Error processing files';
+                setTimeout(() => {
+                    btnText.textContent = 'Upload text files first';
+                }, 2000);
+            }
+        }
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(e);
+                reader.readAsText(file);
+            });
+        }
+
+        function updateFileStats() {
+            if (!markovChain) return;
+            
+            const stats = markovChain.getStats();
+            fileInfo.style.display = 'block';
+            fileStats.innerHTML = `
+                <div class="stat">
+                    <strong>${totalFiles}</strong>
+                    Files
+                </div>
+                <div class="stat">
+                    <strong>${totalWords.toLocaleString()}</strong>
+                    Words
+                </div>
+                <div class="stat">
+                    <strong>${stats.totalGrams.toLocaleString()}</strong>
+                    Grams
+                </div>
+                <div class="stat">
+                    <strong>${Math.round(stats.avgContinuations * 10) / 10}</strong>
+                    Avg Links
+                </div>
+            `;
+        }
+
+        // Generate text
+        generateBtn.addEventListener('click', () => {
+            if (!markovChain) return;
+            
+            const numSentences = parseInt(document.getElementById('lengthInput').value) || 3;
+            const startWord = document.getElementById('startInput').value.trim();
+            const maxWords = parseInt(document.getElementById('maxWordsInput').value) || null;
+            const order = parseInt(document.getElementById('orderInput').value) || 2;
+            
+            // Rebuild chain if order changed
+            if (markovChain.order !== order) {
+                generateBtn.disabled = true;
+                btnText.innerHTML = '<span class="loading"></span> Rebuilding chain...';
+                
+                // Small delay to show loading state
+                setTimeout(() => {
+                    // This is a simplified rebuild - in a real app you'd store the original text
+                    btnText.textContent = 'Chain order changed - please re-upload files';
+                    generateBtn.disabled = false;
+                }, 500);
+                return;
+            }
+            
+            const generatedText = markovChain.generateText(numSentences, startWord, maxWords);
+            addTextCard(generatedText);
+        });
+
+        function addTextCard(text) {
+            // Remove placeholder if it exists
+            const placeholder = outputContainer.querySelector('div[style*="text-align: center"]');
+            if (placeholder) placeholder.remove();
+            
+            const card = document.createElement('div');
+            card.className = 'text-card';
+            card.innerHTML = `<div class="text-content">${text}</div>`;
+            
+            // Add with animation
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            outputContainer.insertBefore(card, outputContainer.firstChild);
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        // Clear output
+        clearBtn.addEventListener('click', () => {
+            outputContainer.innerHTML = `
+                <div style="text-align: center; color: #999; padding: 40px;">
+                    Generated text will appear here...
+                </div>
+            `;
+        });
+
+        // Update chain order
+        document.getElementById('orderInput').addEventListener('change', () => {
+            if (markovChain) {
+                generateBtn.disabled = true;
+                btnText.textContent = 'Re-upload files to apply new order';
+                fileInfo.style.display = 'none';
+                markovChain = null;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tool Name</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="text-reverser.html">Text Reversal</a>
+        <a href="line-break-lab.html">Line Break Lab</a>
+        <a href="eraser-lab.html">Eraser Lab</a>
+        <a href="alphabetizer-lab.html">Alphabetizer Lab</a>
+    </nav>
+    
+    <!-- Tool content here -->
+     <div class="container">
+        <h1>Line Break Laboratory</h1>
+        <p class="subtitle">Experiment with adding and removing line breaks in your text</p>
+        
+        <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">📄</div>
+            <p style="font-size: 1.2em; color: #2ecc71; font-weight: 600;">Click or drag a .txt file here</p>
+            <p style="color: #999; margin-top: 10px;">Your text will appear below once uploaded</p>
+            <input type="file" id="fileInput" accept=".txt">
+        </div>
+        
+        <div class="tools-section" id="toolsSection" style="display: none;">
+            
+            <!-- Break After Specific String -->
+            <div class="tool-card">
+                <h3>Break After String</h3>
+                <p class="tool-description">Add or remove line breaks after specific text</p>
+                <div class="tool-controls">
+                    <input type="text" class="text-input" id="stringInput" placeholder='e.g., "." or "the" or ","'>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-action="add" data-tool="string">Add Breaks</button>
+                        <button class="toggle-btn" data-action="remove" data-tool="string">Remove Breaks</button>
+                    </div>
+                    <button class="apply-btn" id="applyStringBtn">Apply</button>
+                </div>
+            </div>
+            
+            <!-- Break Between Words -->
+            <div class="tool-card">
+                <h3>Break Between Every Word</h3>
+                <p class="tool-description">Put each word on its own line</p>
+                <div class="tool-controls">
+                    <button class="apply-btn" id="applyWordsBtn" style="width: 100%;">Apply</button>
+                </div>
+            </div>
+            
+            <!-- Break By Starting Letter/Punctuation -->
+            <div class="tool-card">
+                <h3>Break Before Words Starting With...</h3>
+                <p class="tool-description">Target words that begin with specific characters</p>
+                <div class="tool-controls">
+                    <input type="text" class="text-input" id="startInput" placeholder='e.g., "a" or "T" or "!"' maxlength="5">
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-action="add" data-tool="start">Add Breaks</button>
+                        <button class="toggle-btn" data-action="remove" data-tool="start">Remove Breaks</button>
+                    </div>
+                    <button class="apply-btn" id="applyStartBtn">Apply</button>
+                </div>
+            </div>
+            
+            <!-- Break By Ending Letter/Punctuation -->
+            <div class="tool-card">
+                <h3>Break After Words Ending With...</h3>
+                <p class="tool-description">Target words that end with specific characters</p>
+                <div class="tool-controls">
+                    <input type="text" class="text-input" id="endInput" placeholder='e.g., "s" or "." or "ing"' maxlength="5">
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-action="add" data-tool="end">Add Breaks</button>
+                        <button class="toggle-btn" data-action="remove" data-tool="end">Remove Breaks</button>
+                    </div>
+                    <button class="apply-btn" id="applyEndBtn">Apply</button>
+                </div>
+            </div>
+            
+            <!-- Remove All Line Breaks -->
+            <div class="tool-card">
+                <h3>Remove All Line Breaks</h3>
+                <p class="tool-description">Join all text into a continuous flow</p>
+                <div class="tool-controls">
+                    <button class="apply-btn" id="removeAllBtn" style="width: 100%;">Remove All Breaks</button>
+                </div>
+            </div>
+            
+            <!-- Reset Button -->
+            <div class="tool-card reset-card">
+                <button class="reset-btn" id="resetBtn">Reset to Original</button>
+            </div>
+            
+        </div>
+        
+        <div class="text-display" id="textDisplay" style="display: none;">
+            <div class="toggle-bar">
+                <button class="view-toggle active" id="showOriginalBtn">Original Text</button>
+                <button class="view-toggle" id="showModifiedBtn">Modified Text</button>
+            </div>
+            <div class="text-box">
+                <div class="text-content" id="displayText"></div>
+            </div>
+        </div>
+    </div>
+ 
+
+    <script>
+        // JavaScript for this specific tool
+        let originalText = '';
+let currentText = '';
+let showingOriginal = true;
+
+// Tool states (add or remove)
+const toolStates = {
+    string: 'add',
+    words: 'add',
+    start: 'add',
+    end: 'add'
+};
+
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const toolsSection = document.getElementById('toolsSection');
+const textDisplay = document.getElementById('textDisplay');
+const displayText = document.getElementById('displayText');
+const showOriginalBtn = document.getElementById('showOriginalBtn');
+const showModifiedBtn = document.getElementById('showModifiedBtn');
+
+// Tool inputs
+const stringInput = document.getElementById('stringInput');
+const startInput = document.getElementById('startInput');
+const endInput = document.getElementById('endInput');
+
+// Apply buttons
+const applyStringBtn = document.getElementById('applyStringBtn');
+const applyWordsBtn = document.getElementById('applyWordsBtn');
+const applyStartBtn = document.getElementById('applyStartBtn');
+const applyEndBtn = document.getElementById('applyEndBtn');
+const removeAllBtn = document.getElementById('removeAllBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+// Upload handlers
+uploadZone.addEventListener('click', () => fileInput.click());
+
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+});
+
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.txt')) {
+        readFile(file);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        readFile(file);
+    }
+});
+
+function readFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        originalText = e.target.result;
+        currentText = originalText;
+        displayTexts();
+        toolsSection.style.display = 'grid';
+        textDisplay.style.display = 'block';
+    };
+    reader.readAsText(file);
+}
+
+function displayTexts() {
+    displayText.textContent = showingOriginal ? originalText : currentText;
+}
+
+function updateDisplay() {
+    displayText.textContent = showingOriginal ? originalText : currentText;
+}
+
+// Toggle buttons handler
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tool = this.dataset.tool;
+        const action = this.dataset.action;
+        
+        // Update state
+        toolStates[tool] = action;
+        
+        // Update UI
+        const siblings = this.parentElement.querySelectorAll('.toggle-btn');
+        siblings.forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+// Apply String Break
+applyStringBtn.addEventListener('click', () => {
+    const str = stringInput.value;
+    if (!str) return;
+    
+    const escapedStr = str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    if (toolStates.string === 'add') {
+        const regex = new RegExp(escapedStr, 'g');
+        currentText = currentText.replace(regex, str + '\n');
+    } else {
+        const regex = new RegExp(escapedStr + '\\n', 'g');
+        currentText = currentText.replace(regex, str);
+    }
+    
+    updateDisplay();
+});
+
+// Apply Words Break
+applyWordsBtn.addEventListener('click', () => {
+    // Split by any whitespace (spaces, tabs, newlines) and rejoin with newlines
+    currentText = currentText.split(/\s+/).filter(word => word.length > 0).join('\n');
+    updateDisplay();
+});
+
+// Apply Start Character Break
+applyStartBtn.addEventListener('click', () => {
+    const chars = startInput.value;
+    if (!chars) return;
+    
+    const escapedChars = chars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    if (toolStates.start === 'add') {
+        const regex = new RegExp('(\\s+)(' + escapedChars + ')', 'gi');
+        currentText = currentText.replace(regex, '\n$2');
+    } else {
+        const regex = new RegExp('\\n(' + escapedChars + ')', 'gi');
+        currentText = currentText.replace(regex, ' $1');
+    }
+    
+    updateDisplay();
+});
+
+// Apply End Character Break
+applyEndBtn.addEventListener('click', () => {
+    const chars = endInput.value;
+    if (!chars) return;
+    
+    const escapedChars = chars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    if (toolStates.end === 'add') {
+        const regex = new RegExp('(' + escapedChars + ')(\\s+)', 'gi');
+        currentText = currentText.replace(regex, '$1\n');
+    } else {
+        const regex = new RegExp('(' + escapedChars + ')\\n', 'gi');
+        currentText = currentText.replace(regex, '$1 ');
+    }
+    
+    updateDisplay();
+});
+
+// Remove All Breaks
+removeAllBtn.addEventListener('click', () => {
+    // Replace all types of line breaks with spaces, then clean up multiple spaces
+    currentText = currentText.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+    updateDisplay();
+});
+
+// Reset
+resetBtn.addEventListener('click', () => {
+    currentText = originalText;
+    updateDisplay();
+});
+
+// View toggles
+showOriginalBtn.addEventListener('click', () => {
+    showingOriginal = true;
+    showOriginalBtn.classList.add('active');
+    showModifiedBtn.classList.remove('active');
+    updateDisplay();
+});
+
+showModifiedBtn.addEventListener('click', () => {
+    showingOriginal = false;
+    showModifiedBtn.classList.add('active');
+    showOriginalBtn.classList.remove('active');
+    updateDisplay();
+});
+
+// Enter key handlers
+stringInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') applyStringBtn.click();
+});
+
+startInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') applyStartBtn.click();
+});
+
+endInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') applyEndBtn.click();
+});
+    </script>
+</body>
+</html>
