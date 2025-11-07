@@ -18,7 +18,7 @@
     <!-- Tool content here -->
      <div class="container">
         <div class="header">
-            <h1>Interactive Poetry Eraser</h1>
+            <h1>Eraser Lab</h1>
             <p>Transform text through selective erasure • Create found poetry from any text</p>
         </div>
 
@@ -88,6 +88,10 @@
                         <input type="checkbox" id="preserveSpacing" checked>
                         <label for="preserveSpacing">Preserve Original Spacing</label>
                     </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="preserveLineBreaks" checked>
+                        <label for="preserveLineBreaks">Preserve Line Breaks</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -124,7 +128,8 @@
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         const fontSizeValue = document.getElementById('fontSizeValue');
         const preserveSpacing = document.getElementById('preserveSpacing');
-        
+        const preserveLineBreaks = document.getElementById('preserveLineBreaks');
+
         // Advanced pattern checkboxes
         const patternCheckboxes = {
             2: document.getElementById('eraseEvery2nd'),
@@ -185,6 +190,10 @@
             if (originalText) processText();
         });
 
+        preserveLineBreaks.addEventListener('change', () => {
+            if (originalText) processText();
+        });
+
         // Advanced pattern listeners
         Object.values(patternCheckboxes).forEach(checkbox => {
             checkbox.addEventListener('change', () => {
@@ -195,11 +204,17 @@
         function processText() {
             if (!originalText) return;
 
+            // Handle line breaks if not preserving them
+            let textToProcess = originalText;
+            if (!preserveLineBreaks.checked) {
+                textToProcess = originalText.replace(/[\r\n]+/g, ' ');
+            }
+
             let elements;
             if (currentMode === 'word') {
-                elements = originalText.split(' ');
+                elements = textToProcess.split(' ');
             } else {
-                elements = originalText.split('');
+                elements = textToProcess.split('');
             }
 
             const processedElements = elements.map((element, index) => {
