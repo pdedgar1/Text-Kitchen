@@ -95,11 +95,15 @@
             </div>
             
         </div>
-        
+
         <div class="text-display" id="textDisplay" style="display: none;">
             <div class="toggle-bar">
                 <button class="view-toggle active" id="showOriginalBtn">Original Text</button>
                 <button class="view-toggle" id="showModifiedBtn">Modified Text</button>
+                <div class="font-size-control">
+                    <label for="fontSizeSlider">Font Size: <span id="fontSizeValue">16px</span></label>
+                    <input type="range" class="slider" id="fontSizeSlider" min="12" max="32" value="16">
+                </div>
             </div>
             <div class="text-box">
                 <div class="text-content" id="displayText"></div>
@@ -142,6 +146,10 @@ const applyStartBtn = document.getElementById('applyStartBtn');
 const applyEndBtn = document.getElementById('applyEndBtn');
 const removeAllBtn = document.getElementById('removeAllBtn');
 const resetBtn = document.getElementById('resetBtn');
+
+// Font size control
+const fontSizeSlider = document.getElementById('fontSizeSlider');
+const fontSizeValue = document.getElementById('fontSizeValue');
 
 // Upload handlers
 uploadZone.addEventListener('click', () => fileInput.click());
@@ -191,15 +199,22 @@ function updateDisplay() {
     displayText.textContent = showingOriginal ? originalText : currentText;
 }
 
+// Font size slider handler
+fontSizeSlider.addEventListener('input', () => {
+    const size = fontSizeSlider.value + 'px';
+    fontSizeValue.textContent = size;
+    displayText.style.fontSize = size;
+});
+
 // Toggle buttons handler
 document.querySelectorAll('.toggle-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const tool = this.dataset.tool;
         const action = this.dataset.action;
-        
+
         // Update state
         toolStates[tool] = action;
-        
+
         // Update UI
         const siblings = this.parentElement.querySelectorAll('.toggle-btn');
         siblings.forEach(s => s.classList.remove('active'));

@@ -46,6 +46,10 @@
             <div class="toggle-bar">
                 <button class="toggle-btn active" id="showOriginalBtn">Original Text</button>
                 <button class="toggle-btn" id="showModifiedBtn">Modified Text</button>
+                <div class="font-size-control">
+                    <label for="fontSizeSlider">Font Size: <span id="fontSizeValue">16px</span></label>
+                    <input type="range" class="slider" id="fontSizeSlider" min="12" max="32" value="16">
+                </div>
             </div>
             <div class="text-box">
                 <div class="text-content" id="displayText"></div>
@@ -71,6 +75,10 @@ const textDisplay = document.getElementById('textDisplay');
 const displayText = document.getElementById('displayText');
 const showOriginalBtn = document.getElementById('showOriginalBtn');
 const showModifiedBtn = document.getElementById('showModifiedBtn');
+
+// Font size control
+const fontSizeSlider = document.getElementById('fontSizeSlider');
+const fontSizeValue = document.getElementById('fontSizeValue');
 
 uploadZone.addEventListener('click', () => fileInput.click());
 
@@ -126,6 +134,13 @@ function enableButtons() {
     breakInput.disabled = false;
     addBreaksBtn.disabled = false;
 }
+
+// Font size slider handler
+fontSizeSlider.addEventListener('input', () => {
+    const size = fontSizeSlider.value + 'px';
+    fontSizeValue.textContent = size;
+    displayText.style.fontSize = size;
+});
 
 reverseWordsBtn.addEventListener('click', () => {
     const words = currentText.split(/\s+/);
