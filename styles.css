@@ -327,6 +327,20 @@ h3 {
     color: #4a4a4a;
 }
 
+.upload-section h2,
+.upload-zone h2,
+.upload-area h2 {
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.upload-section p,
+.upload-zone p,
+.upload-area p {
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+
 .upload-text {
     font-size: 1.2em;
     color: #4a4a4a;
