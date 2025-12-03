@@ -107,6 +107,14 @@
 
         <div class="options-section" id="optionsSection" style="display: none;">
             <div class="alphabet-section">
+                <h3>Filter Mode</h3>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" id="removeModeBtn">Remove words WITH selected letters</button>
+                    <button class="mode-btn" id="keepModeBtn">Keep ONLY words WITH selected letters</button>
+                </div>
+            </div>
+
+            <div class="alphabet-section">
                 <h3>English Alphabet</h3>
                 <div class="select-controls">
                     <button class="select-btn" id="selectAllEnglish">Select All</button>
@@ -119,13 +127,15 @@
                 <h3>Spanish Letter</h3>
                 <div class="letter-toggles" id="spanishToggles"></div>
             </div>
-
-            <button class="apply-btn" id="applyBtn">Apply Lipogram Filter</button>
         </div>
 
         <div class="results-section" id="resultsSection" style="display: none;">
             <div class="output-header">
                 <div class="output-title">Filtered Text</div>
+                <div class="font-size-control">
+                    <label for="fontSizeSlider">Font Size:</label>
+                    <input type="range" id="fontSizeSlider" class="slider" min="12" max="32" value="16" step="1">
+                </div>
             </div>
             <div class="output-text" id="outputText"></div>
             <div class="stats" id="statsDisplay"></div>
@@ -135,13 +145,15 @@
     <script>
         let fileContent = '';
         let selectedLetters = new Set();
+        let filterMode = 'remove'; // 'remove' or 'keep'
 
         const fileInput = document.getElementById('textFile');
         const optionsSection = document.getElementById('optionsSection');
-        const applyBtn = document.getElementById('applyBtn');
         const resultsSection = document.getElementById('resultsSection');
         const outputText = document.getElementById('outputText');
         const statsDisplay = document.getElementById('statsDisplay');
+        const removeModeBtn = document.getElementById('removeModeBtn');
+        const keepModeBtn = document.getElementById('keepModeBtn');
 
         const englishLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         const spanishLetters = ['Ñ'];
@@ -180,7 +192,30 @@
                 selectedLetters.add(letter);
                 element.classList.add('selected');
             }
+            // Auto-apply filter when letters are toggled
+            if (fileContent) {
+                applyLipogramFilter();
+            }
         }
+
+        // Mode button handlers
+        removeModeBtn.addEventListener('click', () => {
+            filterMode = 'remove';
+            removeModeBtn.classList.add('active');
+            keepModeBtn.classList.remove('active');
+            if (fileContent && selectedLetters.size > 0) {
+                applyLipogramFilter();
+            }
+        });
+
+        keepModeBtn.addEventListener('click', () => {
+            filterMode = 'keep';
+            keepModeBtn.classList.add('active');
+            removeModeBtn.classList.remove('active');
+            if (fileContent && selectedLetters.size > 0) {
+                applyLipogramFilter();
+            }
+        });
 
         // Select/Deselect all English letters
         document.getElementById('selectAllEnglish').addEventListener('click', () => {
@@ -189,6 +224,9 @@
                 const toggle = document.querySelector(`#englishToggles [data-letter="${letter}"]`);
                 if (toggle) toggle.classList.add('selected');
             });
+            if (fileContent) {
+                applyLipogramFilter();
+            }
         });
 
         document.getElementById('deselectAllEnglish').addEventListener('click', () => {
@@ -197,10 +235,12 @@
                 const toggle = document.querySelector(`#englishToggles [data-letter="${letter}"]`);
                 if (toggle) toggle.classList.remove('selected');
             });
+            if (fileContent) {
+                applyLipogramFilter();
+            }
         });
 
         fileInput.addEventListener('change', handleFileUpload);
-        applyBtn.addEventListener('click', applyLipogramFilter);
 
         function handleFileUpload(event) {
             const file = event.target.files[0];
@@ -212,7 +252,10 @@
                         fileContent = e.target.result;
                         optionsSection.style.display = 'block';
                         resultsSection.style.display = 'none';
-                        applyBtn.disabled = false;
+                        // Auto-apply if letters are already selected
+                        if (selectedLetters.size > 0) {
+                            applyLipogramFilter();
+                        }
                     };
                     reader.onerror = function(e) {
                         console.error('Error reading file:', e);
@@ -243,12 +286,11 @@
 
         function applyLipogramFilter() {
             if (!fileContent) {
-                alert('Please upload a text file first');
                 return;
             }
 
             if (selectedLetters.size === 0) {
-                alert('Please select at least one letter to filter');
+                resultsSection.style.display = 'none';
                 return;
             }
 
@@ -256,36 +298,62 @@
             const words = fileContent.split(/\s+/);
             const totalWords = words.filter(w => w.trim().length > 0).length;
 
-            // Filter words that don't contain any selected letters
-            const filteredWords = words.filter(word => {
-                if (word.trim().length === 0) return false;
+            let filteredWords;
+            if (filterMode === 'remove') {
+                // Filter words that don't contain any selected letters (original behavior)
+                filteredWords = words.filter(word => {
+                    if (word.trim().length === 0) return false;
 
-                // Check if word contains any of the selected letters
-                for (let letter of selectedLetters) {
-                    if (wordContainsLetter(word, letter)) {
-                        return false;
+                    // Check if word contains any of the selected letters
+                    for (let letter of selectedLetters) {
+                        if (wordContainsLetter(word, letter)) {
+                            return false;
+                        }
                     }
-                }
-                return true;
-            });
+                    return true;
+                });
+            } else {
+                // Keep only words that contain at least one selected letter (inverse mode)
+                filteredWords = words.filter(word => {
+                    if (word.trim().length === 0) return false;
+
+                    // Check if word contains any of the selected letters
+                    for (let letter of selectedLetters) {
+                        if (wordContainsLetter(word, letter)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+            }
 
             const filteredText = filteredWords.join(' ');
             const remainingWords = filteredWords.length;
             const removedWords = totalWords - remainingWords;
             const removalPercentage = ((removedWords / totalWords) * 100).toFixed(1);
+            const keptPercentage = ((remainingWords / totalWords) * 100).toFixed(1);
 
             outputText.textContent = filteredText || 'No words remaining after filter.';
 
             const selectedLettersList = Array.from(selectedLetters).join(', ');
+            const modeText = filterMode === 'remove' ? 'Removed' : 'Kept';
             statsDisplay.innerHTML = `
-                <strong>Filtered Letters:</strong> ${selectedLettersList}<br>
+                <strong>Filter Mode:</strong> ${modeText} words ${filterMode === 'remove' ? 'WITH' : 'WITHOUT'} selected letters<br>
+                <strong>Selected Letters:</strong> ${selectedLettersList}<br>
                 <strong>Original Word Count:</strong> ${totalWords}<br>
-                <strong>Remaining Words:</strong> ${remainingWords}<br>
+                <strong>Remaining Words:</strong> ${remainingWords} (${keptPercentage}%)<br>
                 <strong>Removed Words:</strong> ${removedWords} (${removalPercentage}%)
             `;
 
             resultsSection.style.display = 'block';
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Font size slider
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        if (fontSizeSlider) {
+            fontSizeSlider.addEventListener('input', (e) => {
+                outputText.style.fontSize = e.target.value + 'px';
+            });
         }
 
         // Initialize on page load

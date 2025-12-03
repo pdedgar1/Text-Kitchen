@@ -76,12 +76,28 @@
                 </div>
             </div>
 
+            <div class="option-group">
+                <label>Whitespace Handling:</label>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="ignoreLineBreaks" checked />
+                    <label for="ignoreLineBreaks">Ignore line breaks when measuring length</label>
+                </div>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="ignoreWhitespace" checked />
+                    <label for="ignoreWhitespace">Ignore extra whitespace when measuring length</label>
+                </div>
+            </div>
+
             <button class="apply-btn" id="organizeBtn">Organize Text</button>
         </div>
 
         <div class="results-section" id="resultsSection" style="display: none;">
             <div class="output-header">
                 <div class="output-title">Reorganized Text</div>
+                <div class="font-size-control">
+                    <label for="fontSizeSlider">Font Size:</label>
+                    <input type="range" id="fontSizeSlider" class="slider" min="12" max="32" value="16" step="1">
+                </div>
             </div>
             <div class="output-text" id="outputText"></div>
             <div class="stats" id="statsDisplay"></div>
@@ -212,6 +228,20 @@
             return text.split(/\s+/).filter(word => word.trim().length > 0);
         }
 
+        function getMeasuredLength(text) {
+            let measured = text;
+            const ignoreLineBreaks = document.getElementById('ignoreLineBreaks').checked;
+            const ignoreWhitespace = document.getElementById('ignoreWhitespace').checked;
+
+            if (ignoreLineBreaks) {
+                measured = measured.replace(/\n/g, '');
+            }
+            if (ignoreWhitespace) {
+                measured = measured.replace(/\s+/g, ' ').trim();
+            }
+            return measured.length;
+        }
+
         function organizeText() {
             if (!fileContent) {
                 alert('Please upload a text file first');
@@ -243,17 +273,18 @@
                     break;
             }
 
-            // Sort by length
+            // Sort by measured length (considering whitespace options)
             segments.sort((a, b) => {
-                const lengthDiff = a.length - b.length;
+                const lengthDiff = getMeasuredLength(a) - getMeasuredLength(b);
                 return sortOrder === 'longest' ? -lengthDiff : lengthDiff;
             });
 
-            // Calculate statistics
+            // Calculate statistics using measured lengths
             const totalSegments = segments.length;
-            const avgLength = Math.round(segments.reduce((sum, s) => sum + s.length, 0) / totalSegments);
-            const minLength = Math.min(...segments.map(s => s.length));
-            const maxLength = Math.max(...segments.map(s => s.length));
+            const lengths = segments.map(s => getMeasuredLength(s));
+            const avgLength = Math.round(lengths.reduce((sum, l) => sum + l, 0) / totalSegments);
+            const minLength = Math.min(...lengths);
+            const maxLength = Math.max(...lengths);
 
             // Display results
             let displayText = '';
@@ -275,6 +306,14 @@
 
             resultsSection.style.display = 'block';
             resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Font size slider
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        if (fontSizeSlider) {
+            fontSizeSlider.addEventListener('input', (e) => {
+                outputText.style.fontSize = e.target.value + 'px';
+            });
         }
     </script>
 </body>
