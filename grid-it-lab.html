@@ -115,23 +115,16 @@
 
             <div class="option-group words-per-cell-group">
                 <h3>Words Per Cell</h3>
-                <div class="radio-group">
-                    <label class="radio-option" for="oneWord">
-                        <input type="radio" id="oneWord" name="wordsPerCell" value="1" checked />
-                        <span>1 Word</span>
-                    </label>
-                    <label class="radio-option" for="twoWords">
-                        <input type="radio" id="twoWords" name="wordsPerCell" value="2" />
-                        <span>2 Words</span>
-                    </label>
-                    <label class="radio-option" for="threeWords">
-                        <input type="radio" id="threeWords" name="wordsPerCell" value="3" />
-                        <span>3 Words</span>
-                    </label>
-                    <label class="radio-option" for="fitAll">
-                        <input type="radio" id="fitAll" name="wordsPerCell" value="fit" />
-                        <span>Fit All (divide evenly)</span>
-                    </label>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="fitAllCheckbox" />
+                    <label for="fitAllCheckbox">Fit All (divide evenly across grid)</label>
+                </div>
+                <div class="slider-container" id="wordsPerCellContainer">
+                    <div class="slider-label">
+                        <span>Words per cell:</span>
+                        <span id="wordsPerCellValue">1</span>
+                    </div>
+                    <input type="range" id="wordsPerCellSlider" class="slider" min="1" max="20" value="1" step="1">
                 </div>
             </div>
 
@@ -155,6 +148,10 @@
         <div class="results-section" id="resultsSection" style="display: none;">
             <div class="output-header">
                 <div class="output-title">Grid View</div>
+                <div class="font-size-control">
+                    <label for="fontSizeSlider">Font Size:</label>
+                    <input type="range" id="fontSizeSlider" class="slider" min="10" max="24" value="14" step="1">
+                </div>
             </div>
             <div id="gridContainer"></div>
             <div class="stats" id="statsDisplay"></div>
@@ -226,27 +223,22 @@
 
             const columnsInput = document.getElementById('columnsInput').value;
             const rowsInput = document.getElementById('rowsInput').value;
-            const wordsPerCellValue = document.querySelector('input[name="wordsPerCell"]:checked').value;
+            const fitAllChecked = document.getElementById('fitAllCheckbox').checked;
+            const wordsPerCellSliderValue = parseInt(document.getElementById('wordsPerCellSlider').value);
             const direction = document.querySelector('input[name="direction"]:checked').value;
 
             let columns, rows, wordsPerCell;
 
-            // Determine words per cell
-            if (wordsPerCellValue === 'fit') {
-                wordsPerCell = null; // Will calculate later
-            } else {
-                wordsPerCell = parseInt(wordsPerCellValue);
-            }
-
             // Calculate grid dimensions
-            if (wordsPerCellValue === 'fit') {
+            if (fitAllChecked) {
                 // "Fit All" mode: divide words evenly
                 columns = columnsInput ? parseInt(columnsInput) : 10;
                 rows = rowsInput ? parseInt(rowsInput) : Math.ceil(words.length / columns);
                 const totalCells = columns * rows;
                 wordsPerCell = Math.ceil(words.length / totalCells);
             } else {
-                // Specific words per cell
+                // Specific words per cell from slider
+                wordsPerCell = wordsPerCellSliderValue;
                 const totalWordsNeeded = words.length;
                 const cellsNeeded = Math.ceil(totalWordsNeeded / wordsPerCell);
 
@@ -313,14 +305,14 @@
             gridContainer.appendChild(table);
 
             // Calculate statistics
-            const wordsUsed = wordsPerCellValue === 'fit'
+            const wordsUsed = fitAllChecked
                 ? words.length
                 : Math.min(words.length, totalCells * wordsPerCell);
             const wordsNotUsed = words.length - wordsUsed;
 
             statsDisplay.innerHTML = `
                 <strong>Grid Size:</strong> ${columns} columns × ${rows} rows (${totalCells} cells)<br>
-                <strong>Words Per Cell:</strong> ${wordsPerCellValue === 'fit' ? `~${wordsPerCell} (average)` : wordsPerCell}<br>
+                <strong>Words Per Cell:</strong> ${fitAllChecked ? `~${wordsPerCell} (average)` : wordsPerCell}<br>
                 <strong>Total Words:</strong> ${words.length}<br>
                 <strong>Words in Grid:</strong> ${wordsUsed}<br>
                 ${wordsNotUsed > 0 ? `<strong>Words Not Displayed:</strong> ${wordsNotUsed}<br>` : ''}
@@ -329,6 +321,37 @@
 
             resultsSection.style.display = 'block';
             resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Words per cell slider
+        const wordsPerCellSlider = document.getElementById('wordsPerCellSlider');
+        const wordsPerCellValue = document.getElementById('wordsPerCellValue');
+        const wordsPerCellContainer = document.getElementById('wordsPerCellContainer');
+        const fitAllCheckbox = document.getElementById('fitAllCheckbox');
+
+        if (wordsPerCellSlider && wordsPerCellValue) {
+            wordsPerCellSlider.addEventListener('input', (e) => {
+                wordsPerCellValue.textContent = e.target.value;
+            });
+        }
+
+        if (fitAllCheckbox && wordsPerCellContainer) {
+            fitAllCheckbox.addEventListener('change', (e) => {
+                wordsPerCellContainer.style.opacity = e.target.checked ? '0.5' : '1';
+                wordsPerCellSlider.disabled = e.target.checked;
+            });
+        }
+
+        // Font size slider
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const gridContainer = document.getElementById('gridContainer');
+        if (fontSizeSlider && gridContainer) {
+            fontSizeSlider.addEventListener('input', (e) => {
+                const table = gridContainer.querySelector('.grid-table');
+                if (table) {
+                    table.style.fontSize = e.target.value + 'px';
+                }
+            });
         }
     </script>
 </body>
