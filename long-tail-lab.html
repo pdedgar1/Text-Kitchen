@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Long Tail Lab - Text-Kitchen</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="main-nav">
+        <a href="index.html">Home</a>
+        <a href="text-reverse-lab.html">Text Reversal</a>
+        <a href="line-break-lab.html">Line Break Lab</a>
+        <a href="eraser-lab.html">Eraser Lab</a>
+        <a href="alphabetizer-lab.html">Alphabetizer Lab</a>
+        <a href="markov-mashup-lab.html">Markov Mashup Lab</a>
+        <a href="lipogram-lab.html">Lipogram Lab</a>
+        <a href="long-tail-lab.html">Long Tail Lab</a>
+        <a href="grid-it-lab.html">Grid-It Lab</a>
+        <a href="about.html">About</a>
+    </nav>
+
+    <div class="container">
+        <h1>Long Tail Lab</h1>
+        <p class="subtitle">Reorganize text by the length of clauses, sentences, lines, or words</p>
+
+        <p style="margin-bottom: 30px; line-height: 1.8; color: #4a4a4a;">
+            [Add your description here about how the Long Tail Lab reorganizes text and how this can reveal patterns or create new reading experiences.]
+        </p>
+
+        <div class="upload-section">
+            <div class="upload-icon">📄</div>
+            <h2>Upload Text File</h2>
+            <p>Select a .txt file to reorganize by length</p>
+            <label class="file-input-wrapper">
+                Choose File
+                <input type="file" id="textFile" accept=".txt" />
+            </label>
+        </div>
+
+        <div class="options-section" id="optionsSection" style="display: none;">
+            <div class="option-group">
+                <label>Organize By:</label>
+                <div class="radio-group">
+                    <label class="radio-option" for="byClause">
+                        <input type="radio" id="byClause" name="organizeBy" value="clause" checked />
+                        <span>Clause (. : ; — , --)</span>
+                    </label>
+                    <label class="radio-option" for="byNewline">
+                        <input type="radio" id="byNewline" name="organizeBy" value="newline" />
+                        <span>New-lines</span>
+                    </label>
+                    <label class="radio-option" for="bySentence">
+                        <input type="radio" id="bySentence" name="organizeBy" value="sentence" />
+                        <span>Sentences (. ! ?)</span>
+                    </label>
+                    <label class="radio-option" for="byWord">
+                        <input type="radio" id="byWord" name="organizeBy" value="word" />
+                        <span>Words</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <label>Sort Order:</label>
+                <div class="radio-group">
+                    <label class="radio-option" for="longestFirst">
+                        <input type="radio" id="longestFirst" name="sortOrder" value="longest" checked />
+                        <span>Longest First</span>
+                    </label>
+                    <label class="radio-option" for="shortestFirst">
+                        <input type="radio" id="shortestFirst" name="sortOrder" value="shortest" />
+                        <span>Shortest First</span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="apply-btn" id="organizeBtn">Organize Text</button>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="output-header">
+                <div class="output-title">Reorganized Text</div>
+            </div>
+            <div class="output-text" id="outputText"></div>
+            <div class="stats" id="statsDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        let fileContent = '';
+
+        const fileInput = document.getElementById('textFile');
+        const optionsSection = document.getElementById('optionsSection');
+        const organizeBtn = document.getElementById('organizeBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const outputText = document.getElementById('outputText');
+        const statsDisplay = document.getElementById('statsDisplay');
+
+        fileInput.addEventListener('change', handleFileUpload);
+        organizeBtn.addEventListener('click', organizeText);
+
+        // Add event listeners for radio buttons
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', updateRadioStyles);
+        });
+
+        // Initialize radio button styles
+        updateRadioStyles();
+
+        function updateRadioStyles() {
+            document.querySelectorAll('.radio-option').forEach(option => {
+                const radio = option.querySelector('input[type="radio"]');
+                if (radio.checked) {
+                    option.classList.add('checked');
+                } else {
+                    option.classList.remove('checked');
+                }
+            });
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+
+            if (file) {
+                if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        fileContent = e.target.result;
+                        optionsSection.style.display = 'block';
+                        resultsSection.style.display = 'none';
+                        organizeBtn.disabled = false;
+                    };
+                    reader.onerror = function(e) {
+                        console.error('Error reading file:', e);
+                        alert('Error reading file. Please try again.');
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert('Please select a valid .txt file');
+                }
+            }
+        }
+
+        function splitByClause(text) {
+            // Split by periods, colons, semicolons, em-dashes (— and --), and commas
+            // Preserve the delimiter with each segment
+            const regex = /([^.,;:—]+[.,;:—]|[^.,;:—]+--[^.,;:—]*|[^.,;:—]+)/g;
+            let segments = [];
+            let match;
+
+            // First normalize double hyphens to em-dashes
+            text = text.replace(/--/g, '—');
+
+            // Split by clause delimiters while preserving them
+            const parts = text.split(/([.,;:—])/);
+            let currentSegment = '';
+
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i].match(/[.,;:—]/)) {
+                    currentSegment += parts[i];
+                    if (currentSegment.trim()) {
+                        segments.push(currentSegment);
+                    }
+                    currentSegment = '';
+                } else {
+                    currentSegment += parts[i];
+                }
+            }
+
+            // Add any remaining segment
+            if (currentSegment.trim()) {
+                segments.push(currentSegment);
+            }
+
+            return segments.filter(s => s.trim().length > 0);
+        }
+
+        function splitByNewline(text) {
+            return text.split(/\n/).filter(line => line.trim().length > 0);
+        }
+
+        function splitBySentence(text) {
+            // Split by periods, exclamation marks, and question marks
+            // Preserve the delimiter with each segment
+            const parts = text.split(/([.!?])/);
+            let segments = [];
+            let currentSegment = '';
+
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i].match(/[.!?]/)) {
+                    currentSegment += parts[i];
+                    if (currentSegment.trim()) {
+                        segments.push(currentSegment);
+                    }
+                    currentSegment = '';
+                } else {
+                    currentSegment += parts[i];
+                }
+            }
+
+            // Add any remaining segment
+            if (currentSegment.trim()) {
+                segments.push(currentSegment);
+            }
+
+            return segments.filter(s => s.trim().length > 0);
+        }
+
+        function splitByWord(text) {
+            return text.split(/\s+/).filter(word => word.trim().length > 0);
+        }
+
+        function organizeText() {
+            if (!fileContent) {
+                alert('Please upload a text file first');
+                return;
+            }
+
+            const organizeBy = document.querySelector('input[name="organizeBy"]:checked').value;
+            const sortOrder = document.querySelector('input[name="sortOrder"]:checked').value;
+
+            let segments = [];
+            let segmentType = '';
+
+            switch (organizeBy) {
+                case 'clause':
+                    segments = splitByClause(fileContent);
+                    segmentType = 'clauses';
+                    break;
+                case 'newline':
+                    segments = splitByNewline(fileContent);
+                    segmentType = 'lines';
+                    break;
+                case 'sentence':
+                    segments = splitBySentence(fileContent);
+                    segmentType = 'sentences';
+                    break;
+                case 'word':
+                    segments = splitByWord(fileContent);
+                    segmentType = 'words';
+                    break;
+            }
+
+            // Sort by length
+            segments.sort((a, b) => {
+                const lengthDiff = a.length - b.length;
+                return sortOrder === 'longest' ? -lengthDiff : lengthDiff;
+            });
+
+            // Calculate statistics
+            const totalSegments = segments.length;
+            const avgLength = Math.round(segments.reduce((sum, s) => sum + s.length, 0) / totalSegments);
+            const minLength = Math.min(...segments.map(s => s.length));
+            const maxLength = Math.max(...segments.map(s => s.length));
+
+            // Display results
+            let displayText = '';
+            if (organizeBy === 'word') {
+                displayText = segments.join(' ');
+            } else {
+                displayText = segments.join('\n\n');
+            }
+
+            outputText.textContent = displayText;
+
+            statsDisplay.innerHTML = `
+                <strong>Total ${segmentType}:</strong> ${totalSegments}<br>
+                <strong>Average length:</strong> ${avgLength} characters<br>
+                <strong>Shortest:</strong> ${minLength} characters<br>
+                <strong>Longest:</strong> ${maxLength} characters<br>
+                <strong>Sort order:</strong> ${sortOrder === 'longest' ? 'Longest to Shortest' : 'Shortest to Longest'}
+            `;
+
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
