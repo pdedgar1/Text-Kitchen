@@ -73,7 +73,13 @@
         </div>
 
         <div class="results-section" id="resultsSection" style="display: none;">
-            <div class="results-header" id="resultsHeader">Word Analysis Results</div>
+            <div class="output-header">
+                <div class="results-header" id="resultsHeader">Word Analysis Results</div>
+                <div class="font-size-control">
+                    <label for="fontSizeSlider">Font Size:</label>
+                    <input type="range" id="fontSizeSlider" class="slider" min="10" max="28" value="16" step="1">
+                </div>
+            </div>
             <div class="word-display" id="wordDisplay"></div>
             <div class="stats" id="statsDisplay"></div>
         </div>
@@ -212,6 +218,15 @@ function rearrangeWords() {
 
     resultsSection.style.display = 'block';
     resultsSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Font size slider
+const fontSizeSlider = document.getElementById('fontSizeSlider');
+const wordDisplay = document.getElementById('wordDisplay');
+if (fontSizeSlider && wordDisplay) {
+    fontSizeSlider.addEventListener('input', (e) => {
+        wordDisplay.style.fontSize = e.target.value + 'px';
+    });
 }
     </script>
 </body>
