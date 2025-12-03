@@ -148,10 +148,6 @@
         <div class="results-section" id="resultsSection" style="display: none;">
             <div class="output-header">
                 <div class="output-title">Grid View</div>
-                <div class="font-size-control">
-                    <label for="fontSizeSlider">Font Size:</label>
-                    <input type="range" id="fontSizeSlider" class="slider" min="10" max="24" value="14" step="1">
-                </div>
             </div>
             <div id="gridContainer"></div>
             <div class="stats" id="statsDisplay"></div>
@@ -342,17 +338,6 @@
             });
         }
 
-        // Font size slider
-        const fontSizeSlider = document.getElementById('fontSizeSlider');
-        const gridContainer = document.getElementById('gridContainer');
-        if (fontSizeSlider && gridContainer) {
-            fontSizeSlider.addEventListener('input', (e) => {
-                const table = gridContainer.querySelector('.grid-table');
-                if (table) {
-                    table.style.fontSize = e.target.value + 'px';
-                }
-            });
-        }
     </script>
 </body>
 </html>
