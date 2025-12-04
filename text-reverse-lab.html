@@ -54,8 +54,8 @@
         
         <div class="text-display" id="textDisplay" style="display: none;">
             <div class="toggle-bar">
-                <button class="toggle-btn active" id="showOriginalBtn">Original Text</button>
-                <button class="toggle-btn" id="showModifiedBtn">Modified Text</button>
+                <button class="toggle-btn" id="showOriginalBtn">Original Text</button>
+                <button class="toggle-btn active" id="showModifiedBtn">Modified Text</button>
                 <div class="font-size-control">
                     <label for="fontSizeSlider">Font Size: <span id="fontSizeValue">16px</span></label>
                     <input type="range" class="slider" id="fontSizeSlider" min="12" max="32" value="16">
@@ -72,7 +72,7 @@
 
 let originalText = '';
 let currentText = '';
-let showingOriginal = true;
+let showingOriginal = false;
 
 const uploadZone = document.getElementById('uploadZone');
 const fileInput = document.getElementById('fileInput');
