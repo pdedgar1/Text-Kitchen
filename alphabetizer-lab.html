@@ -97,6 +97,7 @@ const resultsSection = document.getElementById('resultsSection');
 const wordDisplay = document.getElementById('wordDisplay');
 const statsDisplay = document.getElementById('statsDisplay');
 const resultsHeader = document.getElementById('resultsHeader');
+const fontSizeSlider = document.getElementById('fontSizeSlider');
 
 fileInput.addEventListener('change', handleFileUpload);
 rearrangeBtn.addEventListener('click', rearrangeWords);
@@ -221,8 +222,6 @@ function rearrangeWords() {
 }
 
 // Font size slider
-const fontSizeSlider = document.getElementById('fontSizeSlider');
-const wordDisplay = document.getElementById('wordDisplay');
 if (fontSizeSlider && wordDisplay) {
     fontSizeSlider.addEventListener('input', (e) => {
         wordDisplay.style.fontSize = e.target.value + 'px';

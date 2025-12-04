@@ -251,11 +251,8 @@
                     reader.onload = function(e) {
                         fileContent = e.target.result;
                         optionsSection.style.display = 'block';
-                        resultsSection.style.display = 'none';
-                        // Auto-apply if letters are already selected
-                        if (selectedLetters.size > 0) {
-                            applyLipogramFilter();
-                        }
+                        // Always show the text after upload
+                        applyLipogramFilter();
                     };
                     reader.onerror = function(e) {
                         console.error('Error reading file:', e);

@@ -108,8 +108,8 @@
 
         <div class="text-display" id="textDisplay" style="display: none;">
             <div class="toggle-bar">
-                <button class="view-toggle active" id="showOriginalBtn">Original Text</button>
-                <button class="view-toggle" id="showModifiedBtn">Modified Text</button>
+                <button class="view-toggle" id="showOriginalBtn">Original Text</button>
+                <button class="view-toggle active" id="showModifiedBtn">Modified Text</button>
                 <div class="font-size-control">
                     <label for="fontSizeSlider">Font Size: <span id="fontSizeValue">16px</span></label>
                     <input type="range" class="slider" id="fontSizeSlider" min="12" max="32" value="16">
@@ -126,7 +126,7 @@
         // JavaScript for this specific tool
         let originalText = '';
 let currentText = '';
-let showingOriginal = true;
+let showingOriginal = false;
 
 // Tool states (add or remove)
 const toolStates = {
