@@ -153,34 +153,18 @@ fontSizeSlider.addEventListener('input', () => {
 });
 
 reverseWordsBtn.addEventListener('click', () => {
-    const words = currentText.split(/\s+/);
-    currentText = words.reverse().join(' ');
+    const lines = currentText.split('\n');
+    const reversedLines = lines.map(line => {
+        const words = line.split(/\s+/).filter(w => w.length > 0);
+        return words.reverse().join(' ');
+    });
+    currentText = reversedLines.join('\n');
     updateDisplay();
 });
 
 reverseLinesBtn.addEventListener('click', () => {
-    const segments = currentText.split(/([.\n])/);
-    const lines = [];
-    let temp = '';
-    
-    for (let i = 0; i < segments.length; i++) {
-        if (segments[i] === '.' || segments[i] === '\n') {
-            if (temp.trim()) {
-                lines.push(temp + segments[i]);
-                temp = '';
-            } else if (segments[i] === '\n') {
-                lines.push('\n');
-            }
-        } else {
-            temp += segments[i];
-        }
-    }
-    
-    if (temp.trim()) {
-        lines.push(temp);
-    }
-    
-    currentText = lines.reverse().join('');
+    const lines = currentText.split('\n');
+    currentText = lines.reverse().join('\n');
     updateDisplay();
 });
 
