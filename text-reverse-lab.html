@@ -16,6 +16,7 @@
         <a href="lipogram-lab.html">Lipogram Lab</a>
         <a href="long-tail-lab.html">Long Tail Lab</a>
         <a href="grid-it-lab.html">Grid-It Lab</a>
+        <a href="letter-replacement-lab.html">Letter Swap</a>
         <a href="about.html">About</a>
     </nav>
     
@@ -64,6 +65,7 @@
             <div class="text-box">
                 <div class="text-content" id="displayText"></div>
             </div>
+            <button class="apply-btn" id="exportBtn" style="margin-top: 15px;">Export TXT</button>
         </div>
     </div>
 
@@ -201,6 +203,18 @@ breakInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !addBreaksBtn.disabled) {
         addBreaksBtn.click();
     }
+});
+
+document.getElementById('exportBtn').addEventListener('click', function() {
+    const text = displayText.textContent;
+    if (!text) return;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'text-reversal-output.txt';
+    a.click();
+    URL.revokeObjectURL(url);
 });
     </script>
     </body>

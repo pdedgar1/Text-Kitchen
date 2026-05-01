@@ -75,6 +75,7 @@
         <a href="lipogram-lab.html">Lipogram Lab</a>
         <a href="long-tail-lab.html">Long Tail Lab</a>
         <a href="grid-it-lab.html">Grid-It Lab</a>
+        <a href="letter-replacement-lab.html">Letter Swap</a>
         <a href="about.html">About</a>
     </nav>
 
@@ -151,6 +152,7 @@
             </div>
             <div id="gridContainer"></div>
             <div class="stats" id="statsDisplay"></div>
+            <button class="apply-btn" id="exportBtn" style="margin-top: 15px;">Export TXT</button>
         </div>
     </div>
 
@@ -337,6 +339,24 @@
                 wordsPerCellSlider.disabled = e.target.checked;
             });
         }
+
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const table = gridContainer.querySelector('table');
+            if (!table) return;
+            const rows = Array.from(table.querySelectorAll('tr')).map(function(tr) {
+                return Array.from(tr.querySelectorAll('td')).map(function(td) {
+                    return td.textContent;
+                }).join('\t');
+            });
+            const text = rows.join('\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'grid-it-lab-output.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
 
     </script>
 </body>
