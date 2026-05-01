@@ -16,6 +16,7 @@
         <a href="lipogram-lab.html">Lipogram Lab</a>
         <a href="long-tail-lab.html">Long Tail Lab</a>
         <a href="grid-it-lab.html">Grid-It Lab</a>
+        <a href="letter-replacement-lab.html">Letter Swap</a>
         <a href="about.html">About</a>
     </nav>
     
@@ -115,6 +116,7 @@
                 <span>Remaining: <span id="remainingCount">0</span> elements</span>
                 <span>Erased: <span id="erasedCount">0</span> elements</span>
             </div>
+            <button class="apply-btn" id="exportBtn" style="display: none; margin-top: 15px;">Export TXT</button>
         </div>
 
     <script>
@@ -266,6 +268,19 @@
             updateStats(elements, processedElements);
         }
 
+        const exportBtn = document.getElementById('exportBtn');
+        exportBtn.addEventListener('click', function() {
+            const text = outputText.textContent;
+            if (!text) return;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'eraser-lab-output.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
         function updateStats(originalElements, processedElements) {
             const originalCount = originalElements.length;
             const erasedCount = processedElements.filter((element, index) => {
@@ -282,6 +297,7 @@
             document.getElementById('erasedCount').textContent = erasedCount;
             
             stats.style.display = 'flex';
+            exportBtn.style.display = 'block';
         }
     </script>
 </body>

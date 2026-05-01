@@ -82,6 +82,7 @@
         <a href="lipogram-lab.html">Lipogram Lab</a>
         <a href="long-tail-lab.html">Long Tail Lab</a>
         <a href="grid-it-lab.html">Grid-It Lab</a>
+        <a href="letter-replacement-lab.html">Letter Swap</a>
         <a href="about.html">About</a>
     </nav>
 
@@ -139,6 +140,7 @@
             </div>
             <div class="output-text" id="outputText"></div>
             <div class="stats" id="statsDisplay"></div>
+            <button class="apply-btn" id="exportBtn" style="margin-top: 15px;">Export TXT</button>
         </div>
     </div>
 
@@ -352,6 +354,18 @@
                 outputText.style.fontSize = e.target.value + 'px';
             });
         }
+
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const text = outputText.textContent;
+            if (!text) return;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lipogram-lab-output.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
 
         // Initialize on page load
         initializeToggles();

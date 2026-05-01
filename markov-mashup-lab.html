@@ -16,6 +16,7 @@
         <a href="lipogram-lab.html">Lipogram Lab</a>
         <a href="long-tail-lab.html">Long Tail Lab</a>
         <a href="grid-it-lab.html">Grid-It Lab</a>
+        <a href="letter-replacement-lab.html">Letter Swap</a>
         <a href="about.html">About</a>
     </nav>
     
@@ -74,6 +75,7 @@
             <div class="output-section">
                 <div class="output-header">
                     <div class="output-title">🎨 Generated Text</div>
+                    <button class="apply-btn" id="exportBtn">Export TXT</button>
                     <button class="clear-btn" id="clearBtn">Clear All</button>
                 </div>
                 <div class="output-container" id="outputContainer">
@@ -368,6 +370,19 @@
                     Generated text will appear here...
                 </div>
             `;
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const cards = outputContainer.querySelectorAll('.text-content');
+            if (!cards.length) return;
+            const text = Array.from(cards).map(function(c) { return c.textContent.trim(); }).join('\n\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'markov-mashup-output.txt';
+            a.click();
+            URL.revokeObjectURL(url);
         });
 
         // Update chain order

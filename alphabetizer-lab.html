@@ -16,6 +16,7 @@
         <a href="lipogram-lab.html">Lipogram Lab</a>
         <a href="long-tail-lab.html">Long Tail Lab</a>
         <a href="grid-it-lab.html">Grid-It Lab</a>
+        <a href="letter-replacement-lab.html">Letter Swap</a>
         <a href="about.html">About</a>
     </nav>
     
@@ -82,6 +83,7 @@
             </div>
             <div class="word-display" id="wordDisplay"></div>
             <div class="stats" id="statsDisplay"></div>
+            <button class="apply-btn" id="exportBtn" style="margin-top: 15px;">Export TXT</button>
         </div>
     </div>
 
@@ -227,6 +229,26 @@ if (fontSizeSlider && wordDisplay) {
         wordDisplay.style.fontSize = e.target.value + 'px';
     });
 }
+
+document.getElementById('exportBtn').addEventListener('click', function() {
+    const items = wordDisplay.querySelectorAll('.word-item');
+    const words = Array.from(items).map(function(item) {
+        const freqSpan = item.querySelector('.frequency');
+        if (freqSpan) {
+            return item.textContent.replace(freqSpan.textContent, '').trim();
+        }
+        return item.textContent.trim();
+    });
+    const text = words.join('\n');
+    if (!text) return;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'alphabetizer-lab-output.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+});
     </script>
 </body>
 </html>
