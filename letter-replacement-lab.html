@@ -69,15 +69,16 @@
         }
 
         .selected-indicator {
-            font-size: 1.8em;
+            font-size: 1.2em;
             font-weight: 700;
             color: #c41e3a;
             display: inline-block;
             min-width: 40px;
-            text-align: center;
+            text-align: left;
             border-bottom: 2px solid #c41e3a;
             padding: 0 5px;
-            line-height: 1.2;
+            line-height: 1.4;
+            word-break: break-all;
         }
     </style>
 </head>
@@ -115,7 +116,7 @@
         <div id="optionsSection" style="display: none;">
             <div class="swap-panels">
                 <div class="swap-panel">
-                    <h3>Replace this letter:</h3>
+                    <h3>Replace these letters:</h3>
                     <div class="selected-row">
                         Selected: <span class="selected-indicator" id="fromSelected">—</span>
                     </div>
@@ -160,7 +161,7 @@
     <script>
         let fileContent = '';
         let currentText = '';
-        let fromLetter = null;
+        let fromLetters = new Set();
         let toLetter = null;
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -182,15 +183,15 @@
                 fromBtn.className = 'letter-btn';
                 fromBtn.textContent = letter;
                 fromBtn.addEventListener('click', () => {
-                    document.querySelectorAll('#fromButtons .letter-btn').forEach(b => b.classList.remove('selected'));
-                    if (fromLetter === letter) {
-                        fromLetter = null;
-                        document.getElementById('fromSelected').textContent = '—';
+                    if (fromLetters.has(letter)) {
+                        fromLetters.delete(letter);
+                        fromBtn.classList.remove('selected');
                     } else {
-                        fromLetter = letter;
+                        fromLetters.add(letter);
                         fromBtn.classList.add('selected');
-                        document.getElementById('fromSelected').textContent = letter;
                     }
+                    const display = fromLetters.size > 0 ? Array.from(fromLetters).join(' ') : '—';
+                    document.getElementById('fromSelected').textContent = display;
                     updateApplyBtn();
                 });
                 fromContainer.appendChild(fromBtn);
@@ -215,7 +216,7 @@
         }
 
         function updateApplyBtn() {
-            applyBtn.disabled = !(fromLetter && toLetter && fileContent);
+            applyBtn.disabled = !(fromLetters.size > 0 && toLetter && fileContent);
         }
 
         fileInput.addEventListener('change', function(event) {
@@ -240,32 +241,33 @@
         });
 
         applyBtn.addEventListener('click', function() {
-            if (!currentText || !fromLetter || !toLetter) return;
+            if (!currentText || fromLetters.size === 0 || !toLetter) return;
 
             const caseSensitive = document.getElementById('caseSensitive').checked;
             let count = 0;
             let result;
+            const toUpper = toLetter;
+            const toLower = toLetter.toLowerCase();
 
             if (caseSensitive) {
-                result = currentText.replace(new RegExp(fromLetter, 'g'), function() {
+                const charClass = '[' + Array.from(fromLetters).join('') + ']';
+                result = currentText.replace(new RegExp(charClass, 'g'), function() {
                     count++;
-                    return toLetter;
+                    return toUpper;
                 });
             } else {
-                const upper = fromLetter;
-                const lower = fromLetter.toLowerCase();
-                const toUpper = toLetter;
-                const toLower = toLetter.toLowerCase();
-                result = currentText.replace(new RegExp('[' + upper + lower + ']', 'g'), function(char) {
+                const chars = Array.from(fromLetters).map(l => l + l.toLowerCase()).join('');
+                result = currentText.replace(new RegExp('[' + chars + ']', 'g'), function(char) {
                     count++;
-                    return char === upper ? toUpper : toLower;
+                    return char === char.toUpperCase() ? toUpper : toLower;
                 });
             }
 
             currentText = result;
             outputText.textContent = result;
+            const fromList = Array.from(fromLetters).join(', ');
             const caseNote = caseSensitive ? ' (uppercase only)' : ' (both cases)';
-            statsDisplay.textContent = 'Last swap: replaced ' + count + ' occurrence' + (count !== 1 ? 's' : '') + ' of "' + fromLetter + '"' + caseNote + ' with "' + toLetter + '"';
+            statsDisplay.textContent = 'Last swap: replaced ' + count + ' occurrence' + (count !== 1 ? 's' : '') + ' of "' + fromList + '"' + caseNote + ' with "' + toLetter + '"';
 
             resetBtn.style.display = 'block';
             resultsSection.style.display = 'block';
@@ -274,6 +276,13 @@
 
         resetBtn.addEventListener('click', function() {
             currentText = fileContent;
+            fromLetters.clear();
+            document.querySelectorAll('#fromButtons .letter-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('fromSelected').textContent = '—';
+            toLetter = null;
+            document.querySelectorAll('#toButtons .letter-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById('toSelected').textContent = '—';
+            updateApplyBtn();
             outputText.textContent = '';
             statsDisplay.textContent = '';
             resultsSection.style.display = 'none';
