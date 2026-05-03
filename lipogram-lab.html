@@ -112,6 +112,7 @@
                 <div class="mode-buttons">
                     <button class="mode-btn active" id="removeModeBtn">Remove words WITH selected letters</button>
                     <button class="mode-btn" id="keepModeBtn">Keep ONLY words WITH selected letters</button>
+                    <button class="mode-btn" id="removeLettersModeBtn">Remove selected letters</button>
                 </div>
             </div>
 
@@ -156,6 +157,7 @@
         const statsDisplay = document.getElementById('statsDisplay');
         const removeModeBtn = document.getElementById('removeModeBtn');
         const keepModeBtn = document.getElementById('keepModeBtn');
+        const removeLettersModeBtn = document.getElementById('removeLettersModeBtn');
 
         const englishLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         const spanishLetters = ['Ñ'];
@@ -205,6 +207,7 @@
             filterMode = 'remove';
             removeModeBtn.classList.add('active');
             keepModeBtn.classList.remove('active');
+            removeLettersModeBtn.classList.remove('active');
             if (fileContent && selectedLetters.size > 0) {
                 applyLipogramFilter();
             }
@@ -214,6 +217,17 @@
             filterMode = 'keep';
             keepModeBtn.classList.add('active');
             removeModeBtn.classList.remove('active');
+            removeLettersModeBtn.classList.remove('active');
+            if (fileContent && selectedLetters.size > 0) {
+                applyLipogramFilter();
+            }
+        });
+
+        removeLettersModeBtn.addEventListener('click', () => {
+            filterMode = 'remove-letters';
+            removeLettersModeBtn.classList.add('active');
+            removeModeBtn.classList.remove('active');
+            keepModeBtn.classList.remove('active');
             if (fileContent && selectedLetters.size > 0) {
                 applyLipogramFilter();
             }
@@ -290,6 +304,20 @@
 
             if (selectedLetters.size === 0) {
                 resultsSection.style.display = 'none';
+                return;
+            }
+
+            if (filterMode === 'remove-letters') {
+                const chars = Array.from(selectedLetters).map(l => l + l.toLowerCase()).join('');
+                const filteredText = fileContent.replace(new RegExp('[' + chars + ']', 'g'), '');
+                const removed = fileContent.length - filteredText.length;
+                outputText.textContent = filteredText;
+                statsDisplay.innerHTML = `
+                    <strong>Filter Mode:</strong> Remove selected letters<br>
+                    <strong>Selected Letters:</strong> ${Array.from(selectedLetters).join(', ')}<br>
+                    <strong>Characters removed:</strong> ${removed}
+                `;
+                resultsSection.style.display = 'block';
                 return;
             }
 

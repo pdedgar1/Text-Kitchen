@@ -68,7 +68,18 @@
             font-size: 0.95em;
         }
 
-        .selected-indicator {
+        .letter-btn.remove-btn {
+            border-color: #c41e3a;
+            color: #c41e3a;
+            font-size: 0.95em;
+        }
+
+        .letter-btn.remove-btn.selected {
+            background: #c41e3a;
+            color: #ffffff;
+            border-color: #c41e3a;
+        }
+
             font-size: 1.2em;
             font-weight: 700;
             color: #c41e3a;
@@ -213,10 +224,27 @@
                 });
                 toContainer.appendChild(toBtn);
             });
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'letter-btn remove-btn';
+            removeBtn.textContent = '∅ Remove';
+            removeBtn.addEventListener('click', () => {
+                document.querySelectorAll('#toButtons .letter-btn').forEach(b => b.classList.remove('selected'));
+                if (toLetter === '') {
+                    toLetter = null;
+                    document.getElementById('toSelected').textContent = '—';
+                } else {
+                    toLetter = '';
+                    removeBtn.classList.add('selected');
+                    document.getElementById('toSelected').textContent = '∅';
+                }
+                updateApplyBtn();
+            });
+            toContainer.appendChild(removeBtn);
         }
 
         function updateApplyBtn() {
-            applyBtn.disabled = !(fromLetters.size > 0 && toLetter && fileContent);
+            applyBtn.disabled = !(fromLetters.size > 0 && toLetter !== null && fileContent);
         }
 
         fileInput.addEventListener('change', function(event) {
@@ -241,21 +269,22 @@
         });
 
         applyBtn.addEventListener('click', function() {
-            if (!currentText || fromLetters.size === 0 || !toLetter) return;
+            if (!currentText || fromLetters.size === 0 || toLetter === null) return;
 
             const caseSensitive = document.getElementById('caseSensitive').checked;
+            const removing = toLetter === '';
             let count = 0;
             let result;
-            const toUpper = toLetter;
-            const toLower = toLetter.toLowerCase();
 
-            if (caseSensitive) {
+            if (removing || caseSensitive) {
                 const charClass = '[' + Array.from(fromLetters).join('') + ']';
                 result = currentText.replace(new RegExp(charClass, 'g'), function() {
                     count++;
-                    return toUpper;
+                    return removing ? '' : toLetter;
                 });
             } else {
+                const toUpper = toLetter;
+                const toLower = toLetter.toLowerCase();
                 const chars = Array.from(fromLetters).map(l => l + l.toLowerCase()).join('');
                 result = currentText.replace(new RegExp('[' + chars + ']', 'g'), function(char) {
                     count++;
@@ -266,8 +295,10 @@
             currentText = result;
             outputText.textContent = result;
             const fromList = Array.from(fromLetters).join(', ');
-            const caseNote = caseSensitive ? ' (uppercase only)' : ' (both cases)';
-            statsDisplay.textContent = 'Last swap: replaced ' + count + ' occurrence' + (count !== 1 ? 's' : '') + ' of "' + fromList + '"' + caseNote + ' with "' + toLetter + '"';
+            const caseNote = caseSensitive && !removing ? ' (uppercase only)' : removing ? '' : ' (both cases)';
+            const action = removing ? 'removed' : 'replaced';
+            const withPart = removing ? '' : ' with "' + toLetter + '"';
+            statsDisplay.textContent = 'Last swap: ' + action + ' ' + count + ' occurrence' + (count !== 1 ? 's' : '') + ' of "' + fromList + '"' + caseNote + withPart;
 
             resetBtn.style.display = 'block';
             resultsSection.style.display = 'block';
@@ -281,6 +312,7 @@
             document.getElementById('fromSelected').textContent = '—';
             toLetter = null;
             document.querySelectorAll('#toButtons .letter-btn').forEach(b => b.classList.remove('selected'));
+
             document.getElementById('toSelected').textContent = '—';
             updateApplyBtn();
             outputText.textContent = '';
