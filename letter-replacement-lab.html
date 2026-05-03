@@ -137,7 +137,10 @@
                 </div>
             </div>
 
-            <button class="apply-btn" id="applyBtn" disabled>Apply Swap</button>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button class="apply-btn" id="applyBtn" disabled>Apply Swap</button>
+                <button class="reset-btn" id="resetBtn" style="display: none;">Reset to Original</button>
+            </div>
         </div>
 
         <div class="results-section" id="resultsSection" style="display: none;">
@@ -156,6 +159,7 @@
 
     <script>
         let fileContent = '';
+        let currentText = '';
         let fromLetter = null;
         let toLetter = null;
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -166,6 +170,7 @@
         const outputText = document.getElementById('outputText');
         const statsDisplay = document.getElementById('statsDisplay');
         const applyBtn = document.getElementById('applyBtn');
+        const resetBtn = document.getElementById('resetBtn');
         const exportBtn = document.getElementById('exportBtn');
 
         function initButtons() {
@@ -220,7 +225,9 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     fileContent = e.target.result;
+                    currentText = fileContent;
                     optionsSection.style.display = 'block';
+                    resultsSection.style.display = 'none';
                     updateApplyBtn();
                 };
                 reader.onerror = function() {
@@ -233,14 +240,14 @@
         });
 
         applyBtn.addEventListener('click', function() {
-            if (!fileContent || !fromLetter || !toLetter) return;
+            if (!currentText || !fromLetter || !toLetter) return;
 
             const caseSensitive = document.getElementById('caseSensitive').checked;
             let count = 0;
             let result;
 
             if (caseSensitive) {
-                result = fileContent.replace(new RegExp(fromLetter, 'g'), function() {
+                result = currentText.replace(new RegExp(fromLetter, 'g'), function() {
                     count++;
                     return toLetter;
                 });
@@ -249,18 +256,28 @@
                 const lower = fromLetter.toLowerCase();
                 const toUpper = toLetter;
                 const toLower = toLetter.toLowerCase();
-                result = fileContent.replace(new RegExp('[' + upper + lower + ']', 'g'), function(char) {
+                result = currentText.replace(new RegExp('[' + upper + lower + ']', 'g'), function(char) {
                     count++;
                     return char === upper ? toUpper : toLower;
                 });
             }
 
+            currentText = result;
             outputText.textContent = result;
             const caseNote = caseSensitive ? ' (uppercase only)' : ' (both cases)';
-            statsDisplay.textContent = 'Replaced ' + count + ' occurrence' + (count !== 1 ? 's' : '') + ' of "' + fromLetter + '"' + caseNote + ' with "' + toLetter + '"';
+            statsDisplay.textContent = 'Last swap: replaced ' + count + ' occurrence' + (count !== 1 ? 's' : '') + ' of "' + fromLetter + '"' + caseNote + ' with "' + toLetter + '"';
 
+            resetBtn.style.display = 'block';
             resultsSection.style.display = 'block';
             resultsSection.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        resetBtn.addEventListener('click', function() {
+            currentText = fileContent;
+            outputText.textContent = '';
+            statsDisplay.textContent = '';
+            resultsSection.style.display = 'none';
+            resetBtn.style.display = 'none';
         });
 
         exportBtn.addEventListener('click', function() {
